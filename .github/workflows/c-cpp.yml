@@ -13,6 +13,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-prerelease: true
+          msbuild-architecture: x64
+
       - name: Set configuration
         run: msbuild /p:Configuration=Release
       - name: Build and run CompressShaders
