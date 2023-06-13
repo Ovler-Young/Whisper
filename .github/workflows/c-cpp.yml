@@ -19,7 +19,9 @@ jobs:
           vs-prerelease: true
           msbuild-architecture: x64
       - name: Set configuration
-        run: msbuild /p:Configuration=Release
+        run: |
+          dotnet restore
+          msbuild /p:Configuration=Release
       - name: Build Whisper project
         run: |
           msbuild Whisper/Whisper.sln /p:Configuration=Release
