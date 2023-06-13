@@ -18,13 +18,10 @@ jobs:
         with:
           vs-prerelease: true
           msbuild-architecture: x64
-      - name: Set configuration
+      - name: Restore
         run: |
           dotnet restore
           msbuild /p:Configuration=Release
-      - name: Build Whisper project
-        run: |
-          msbuild Whisper/Whisper.sln /p:Configuration=Release
       - name: Build and run CompressShaders
         run: |
           cd Tools/CompressShaders
