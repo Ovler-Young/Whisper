@@ -21,7 +21,6 @@ jobs:
       - name: Restore
         run: |
           dotnet restore
-          msbuild /p:Configuration=Release
       - name: Build and run CompressShaders
         run: |
           cd Tools/CompressShaders
