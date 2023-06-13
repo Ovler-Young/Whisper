@@ -21,6 +21,7 @@ jobs:
       - name: Build and run CompressShaders
         run: |
           cd Tools/CompressShaders
+          mkdir -p ./x64/Debug
           dotnet build
           dotnet run
       - name: Set configuration
