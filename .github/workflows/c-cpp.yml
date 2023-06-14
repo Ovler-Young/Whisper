@@ -23,7 +23,7 @@ jobs:
           dotnet restore
       - name: Build and run CompressShaders
         run: |
-          mkdir -p D:\a\Whisper\Whisper\ComputeShaders\x64\Debug
+          mkdir -p D:\a\Whisper\Whisper\ComputeShaders\x64\Release
           dotnet run --project Tools/CompressShaders/CompressShaders.csproj -c Release -v d
       - name: Set configuration
         run: msbuild /p:Configuration=Release
