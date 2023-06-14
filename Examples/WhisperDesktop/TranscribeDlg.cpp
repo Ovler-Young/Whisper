@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TranscribeDlg.h"
 #include "Utils/logger.h"
+#include <string>
 
 HRESULT TranscribeDlg::show()
 {
@@ -59,6 +60,7 @@ LRESULT TranscribeDlg::OnInitDialog( UINT nMessage, WPARAM wParam, LPARAM lParam
 	progressBar.SetStep( 1 );
 
 	sourceMediaPath.SetWindowText( appState.stringLoad( regValInput ) );
+	promptText.SetWindowText( appState.source.promptText ),
 	transcribeOutFormat.SetCurSel( (int)appState.dwordLoad( regValOutFormat, 0 ) );
 	transcribeOutputPath.SetWindowText( appState.stringLoad( regValOutPath ) );
 	if( appState.boolLoad( regValUseInputFolder ) )
@@ -388,6 +390,13 @@ void TranscribeDlg::getThreadError()
 	getLastError( transcribeArgs.errorMessage );
 }
 
+static void __stdcall setPrompt( const int* ptr, int length, void* pv ) //todo 
+{
+	std::vector<int>& vec = *( std::vector<int> * )( pv );
+	if( length > 0 )
+		vec.assign( ptr, ptr + length );
+}
+
 #define CHECK_EX( hr ) { const HRESULT __hr = ( hr ); if( FAILED( __hr ) ) { getThreadError(); return __hr; } }
 
 HRESULT TranscribeDlg::transcribe()
@@ -411,6 +420,26 @@ HRESULT TranscribeDlg::transcribe()
 	CComPtr<iContext> context;
 	CHECK_EX( appState.model->createContext( &context ) );
 
+	CString prompt_text;
+	promptText.GetWindowText( prompt_text ); // get the prompt text from the edit box
+	if (prompt_text.GetLength() > 0)
+		appState.source.promptText = prompt_text;
+	std::vector<int> prompt;
+	if (!prompt_text.IsEmpty()) {
+		std::string prompt_text_std;
+		prompt_text_std = CT2CA( prompt_text , CP_UTF8 );
+		HRESULT hr = appState.model->tokenize( prompt_text_std.c_str(), &setPrompt, &prompt );
+		if( FAILED( hr ) )
+		{
+			getThreadError();
+			return hr;
+		}
+		else
+			logInfo( u8"Using prompt: %s", prompt_text_std.c_str() );
+	}
+	else
+		logInfo( u8"No prompt" );
+
 	sFullParams fullParams;
 	CHECK_EX( context->fullDefaultParams( eSamplingStrategy::Greedy, &fullParams ) );
 	fullParams.language = transcribeArgs.language;
@@ -422,6 +451,10 @@ HRESULT TranscribeDlg::transcribe()
 	fullParams.new_segment_callback_user_data = this;
 	fullParams.encoder_begin_callback = &encoderBeginCallback;
 	fullParams.encoder_begin_callback_user_data = this;
+	if (!prompt.empty()) {
+		fullParams.prompt_tokens = prompt.data();
+		fullParams.prompt_n_tokens = prompt.size();
+	}
 
 	// Setup the progress indication sink
 	sProgressSink progressSink{ &progressCallbackStatic, this };
