@@ -6,6 +6,7 @@
 #include "Utils/LanguageDropdown.h"
 #include "Utils/TranslateCheckbox.h"
 #include "Utils/PendingState.h"
+#include <string>
 
 class TranscribeDlg :
 	public CDialogImpl<TranscribeDlg>,
@@ -45,6 +46,7 @@ public:
 		DDX_CONTROL_HANDLE( IDC_OUTPUT_FORMAT, transcribeOutFormat )
 		DDX_CONTROL_HANDLE( IDC_USE_INPUT_FOLDER, useInputFolder )
 		DDX_CONTROL_HANDLE( IDC_PATH_RESULT, transcribeOutputPath )
+		DDX_CONTROL_HANDLE( IDC_PROMPT_TEXT, promptText );
 		DDX_CONTROL_HANDLE( IDC_BROWSE_RESULT, transcribeOutputBrowse );
 		DDX_CONTROL_HANDLE( IDC_TRANSCRIBE, transcribeButton );
 		DDX_CONTROL_HANDLE( IDC_TRANSCRIBE_PROGRESS, progressBar );
@@ -80,7 +82,10 @@ private:
 	CComboBox transcribeOutFormat;
 	CButton transcribeButton;
 	CProgressBarCtrl progressBar;
+	CEdit promptText;
 	void populateOutputFormats();
+	CString prompt_text;
+	std::string  prompt_text_std;
 
 	LRESULT onOutFormatChange( UINT, INT, HWND, BOOL& bHandled );
 	LRESULT onInputChange( UINT, INT, HWND, BOOL& );

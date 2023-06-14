@@ -6,6 +6,7 @@
 #include "Utils/TranslateCheckbox.h"
 #include "Utils/PendingState.h"
 #include "CircleIndicator.h"
+#include <string>
 
 class CaptureDlg :
 	public CDialogImpl<CaptureDlg>,
@@ -47,6 +48,7 @@ public:
 		DDX_CONTROL_HANDLE( IDC_SAVE_APPEND, checkAppend )
 		DDX_CONTROL_HANDLE( IDC_SAVE_TIMESTAMPS, checkTimestamps )
 		DDX_CONTROL_HANDLE( IDC_PATH_RESULT, transcribeOutputPath )
+		DDX_CONTROL_HANDLE( IDC_PROMPT_TEXT, promptText );
 		DDX_CONTROL_HANDLE( IDC_BROWSE_RESULT, transcribeOutputBrowse );
 
 		DDX_CONTROL( IDC_VOICE_ACTIVITY, voiceActivity );
@@ -93,6 +95,9 @@ private:
 	CButton transcribeOutputBrowse;
 	void onSaveTextCheckbox();
 	eTextFlags getOutputFlags();
+	CEdit promptText;
+	CString prompt_text;
+	std::string  prompt_text_std;
 
 	CButton btnRunCapture;
 	CProgressBarCtrl progressBar;

@@ -1,5 +1,6 @@
 #pragma once
 #include "Utils/DebugConsole.h"
+#include <vector>
 
 class AppState
 {
@@ -11,9 +12,11 @@ public:
 	struct ModelSource
 	{
 		CString path;
+		CString promptText;
 		bool found = false;
 		Whisper::eModelImplementation impl = (Whisper::eModelImplementation)0;
 		uint64_t sizeInBytes = 0;
+		std::vector<int> prompt;
 	};
 	ModelSource source;
 

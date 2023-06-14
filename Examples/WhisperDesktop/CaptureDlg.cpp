@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CaptureDlg.h"
+#include <string>
 
 HRESULT CaptureDlg::show()
 {
@@ -123,7 +124,7 @@ void CaptureDlg::onDeviceRefresh()
 	const size_t len = devices.size();
 	if( len == 0 )
 	{
-		MessageBox( L"No capture devices found on this computer.\nIf you have a USB microphone, connect it to this PC,\nand press “refresh” button.",
+		MessageBox( L"No capture devices found on this computer.\nIf you have a USB microphone, connect it to this PC,\nand press ï¿½refreshï¿½ button.",
 			L"Capture Devices", MB_OK | MB_ICONWARNING );
 	}
 	else
@@ -264,6 +265,13 @@ void __declspec( noinline ) CaptureDlg::getThreadError()
 	getLastError( threadState.errorMessage );
 }
 
+static void __stdcall setPrompt( const int* ptr, int length, void* pv )
+{
+	std::vector<int>& vec = *( std::vector<int> * )( pv );
+	if( length > 0 )
+		vec.assign( ptr, ptr + length );
+}
+
 #define CHECK_EX( hr ) { const HRESULT __hr = ( hr ); if( FAILED( __hr ) ) { getThreadError(); return __hr; } }
 
 static HRESULT appendDate( CString& str, const SYSTEMTIME& time )
@@ -368,6 +376,26 @@ inline HRESULT CaptureDlg::runCapture()
 	CComPtr<iContext> context;
 	CHECK_EX( appState.model->createContext( &context ) );
 
+	CString prompt_text;
+	promptText.GetWindowText( prompt_text ); // get the prompt text from the edit box
+	if (prompt_text.GetLength() > 0)
+		appState.source.promptText = prompt_text;
+	std::vector<int> prompt;
+	if (!prompt_text.IsEmpty()) {
+		std::string prompt_text_std;
+		prompt_text_std = CT2CA( prompt_text , CP_UTF8 );
+		HRESULT hr = appState.model->tokenize( prompt_text_std.c_str(), &setPrompt, &prompt );
+		if( FAILED( hr ) )
+		{
+			getThreadError();
+			return hr;
+		}
+		else
+			logInfo( u8"Using prompt: %s", prompt_text_std.c_str() );
+	}
+	else
+		logInfo( u8"No prompt" );
+
 	sFullParams fullParams;
 	CHECK_EX( context->fullDefaultParams( eSamplingStrategy::Greedy, &fullParams ) );
 	fullParams.language = threadState.language;
@@ -375,6 +403,11 @@ inline HRESULT CaptureDlg::runCapture()
 	fullParams.resetFlag( eFullParamsFlags::PrintRealtime );
 	fullParams.new_segment_callback = &newSegmentCallback;
 	fullParams.new_segment_callback_user_data = this;
+	if (!prompt.empty()) {
+		fullParams.prompt_tokens = prompt.data();
+		fullParams.prompt_n_tokens = prompt.size();
+		logInfo(u8"Using prompt: ");
+	}
 
 	sCaptureCallbacks callbacks;
 	callbacks.shouldCancel = &cbCancel;
